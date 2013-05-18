@@ -40,25 +40,23 @@ script OTcl correspondem a classes programadas em linguagem C++, no
 código fonte do NS2.<br>
 O manual do NS2 descrevendo as classes existentes está disponível em ...<br>
 <br>
-<b">Exemplo Simples</b><br>
+<b>Exemplo Simples:</b><br>
 Suponha o seguinte exemplo de script: <br>
 <br>
-A linha a seguir cria um objeto chamado ns, da classe Simulador.&nbsp;
+A linha a seguir cria um objeto chamado ns, da classe Simulador.
 O objeto ns pode ser utilizado para acessar os métodos e os atributos
 desta classe.<br>
-<codigo>set ns [new Simulator]</codigo><br>
-&nbsp;<br>
-A linha a seguir abre um arquivo&nbsp; para escrita chamado&nbsp; out.nam <br>
-<codigo>set nf [open out.nam w]</codigo><br>
+<pre class="sh_tcl">set ns [new Simulator]</pre>
+<br>
+A linha a seguir abre um arquivo para escrita chamado out.nam <br>
+<pre class="sh_tcl">set nf [open out.nam w]</pre>
 <br>
 Utiliza-se a variável ns para configurar uma saída de resultado
 compatível com o aplicativo NAM para o arquivo out.nam (variável nf)<br>
-<codigo>$ns namtrace-all $nf</codigo><br>
-<br>
+<pre class="sh_tcl">$ns namtrace-all $nf</pre><br>
 Cria duas variáveis, n0 e n1, que representam dois nós de rede  <br>
-<codigo>set n0 [$ns node]</codigo>
-<codigo>set n1 [$ns node]</codigo><br>
-&nbsp;<br>
+<pre class="sh_tcl">set n0 [$ns node]
+set n1 [$ns node]</pre><br>
 Cria e configura um link full duplex entre os nós n0 e n1<br>
 Todos os elementos criados possuem capacidade de roteamento<br>
 A taxa de transmissão configurada é de 1M bit por segundo<br>
@@ -68,17 +66,14 @@ O algoritmo de gerência de fila é o DropTail (descarte de fim de fila).
 Isto pode ser feito posteriomente - no entanto, o tamanho default para
 a fila é de 30 pacotes. Podem ser utilizados outros algoritmos para
 gerência de filas, como RED, SFQ, entre outros.<br>
-<br>
-$ns duplex-link $n0 $n1 1Mb 10ms DropTail<br>
-&nbsp;<br>
-Os agentes são elementos de camada 4 do modelo OSI.&nbsp; A linha a
+<pre class="sh_tcl">$ns duplex-link $n0 $n1 1Mb 10ms DropTail</pre><br>
+Os agentes são elementos de camada 4 do modelo OSI. A linha a
 seguir cria uma variável chamada udp0 do tipo Agent/UDP, que está
 programada para imitar o comportamento do protocolo UDP de nível 4.<br>
 set udp0 [new Agent/UDP]<br>
 <br>
 Conecta o udp0 no nó n0. O nó 0 será o transmissor.<br>
-$ns attach-agent $n0 $udp0<br>
-<br>
+<pre class="sh_tcl">$ns attach-agent $n0 $udp0</pre><br>
 <br>
 O elementos do tipo Application representam aplicações. Estão
 disponíveis aplicações de transferência de arquivos (ftp), de .... A
@@ -86,71 +81,58 @@ linha a seguir cria um aplicativo do tipo CBR (constant bit rate), ou
 de taxa constante, que gera pacotes separados por intervalos de tempo
 fixos (no caso, com 0,01 segundo entre pacotes) e tamanho de pacote
 fixo (no caso, com 1000 bytes). Para o exemplo a taxa de geração de
-informação será dada por (8*1000)/0.01 =&nbsp; 800Kbps.<br>
-set cbr0 [new Application/Traffic/CBR]<br>
-$cbr0 set packetSize_ 1000<br>
-$cbr0 set interval_ 0.01<br>
-$cbr0 attach-agent $udp0<br>
-&nbsp;<br>
-Para realizar a transmissão, é necessário definir o elemento receptor. O agente null criado a seguir será conectado ao nó n1.<br>
-set null0 [new Agent/Null]<br>
-$ns attach-agent $n1 $null0<br>
-&nbsp;<br>
-Configura o&nbsp; tráfego gerado pelo&nbsp; agente udp0 para o null0 (do nó n0 para o nó n1). <br>
-$ns connect $udp0 $null0&nbsp;&nbsp;<br>
+informação será dada por (8*1000)/0.01 = 800Kbps.<br>
+<pre class="sh_tcl">set cbr0 [new Application/Traffic/CBR]
+$cbr0 set packetSize_ 1000
+$cbr0 set interval_ 0.01
+$cbr0 attach-agent $udp0</pre>
 <br>
-Importante: o tempo simulado e o tempo real são diferentes. O tempo
+Para realizar a transmissão, é necessário definir o elemento receptor. O agente null criado a seguir será conectado ao nó n1.<br>
+<pre class="sh_tcl">set null0 [new Agent/Null]
+$ns attach-agent $n1 $null0</pre><br>
+Configura o tráfego gerado pelo agente udp0 para o null0 (do nó n0 para o nó n1). <br>
+<pre class="sh_tcl">$ns connect $udp0 $null0</pre><br>
+<font color="red">Importante:</font> o tempo simulado e o tempo real são diferentes. O tempo
 simulado é representado por uma variável interna ao NS2. Dependendo da
 complexidade da simulação, é possível simular 1000 segundos de operação
 da rede muito rapidamente. O contrário também é verdadeiro: em cenários
 complexos, para simular os mesmos 1000 segundos pode ser necessário um
 tempo de processamento muito grande.<br>
 Configura o escalonador de eventos, no exemplo, para indicar quais os momentos de início e fim da transmissão.<br>
-$ns at 0.5 "$cbr0 start"<br>
-$ns at 4.5 "$cbr0 stop"<br>
+<pre class="sh_tcl">$ns at 0.5 "$cbr0 start"
+$ns at 4.5 "$cbr0 stop"</pre>
 <br>
 Configura o escalonador de eventos para acionar o procedimento finish no momento 5.0 de simulação.<br>
-$ns at 5.0 "finish"<br>
-&nbsp;<br>
+<pre class="sh_tcl">$ns at 5.0 "finish"</pre><br>
 Invoca o método run da classe Simulator, que irá executar as funções agendadas no escalonador de eventos.<br>
-$ns run<br>
-<br>
-<br>
+<pre class="sh_tcl">$ns run</pre><br>
 Procedimento finish, que está sendo chamado no momento de simulação 5.0<br>
+<pre class="sh_tcl">proc finish {} {
 
-<br>
-proc finish {} {<br>
-&nbsp; &nbsp; &nbsp; &nbsp; -- avisa que serão usadas as variáveis
-globais ns e nf (se não fosse feita a definição, teriam que ser
-variáveis locais deste procedimento)<br>
+# Avisa que serão usadas as variáveis
+#globais ns e nf (se não fosse feita a definição, teriam que ser
+#variáveis locais deste procedimento).
+global ns nf
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; global ns nf
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -- descarrega os buffers para atualizar o arquivo<br>
+# Descarrega os buffers para atualizar o arquivo
+$ns flush-trace
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $ns flush-trace
-<br>
-&nbsp; &nbsp; &nbsp; &nbsp; --&nbsp; fecha o arquivo
-<br>
-<br>
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; close $nf
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -- executa o nam, indicando que a
-entrada será o arquivo out.nam (que é a saída deste script). O &amp;
-indica para o unix que o programa nam deve rodar em background.<br>
+# Fecha o arquivo
+close $nf
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exec nam out.nam &amp;
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -- finaliza passando o código 0
-para o shell que acionou. Caso seja usado um script para chamar o
-programa, é possível testar o retorno. No caso, 0 é um indicativo de
-sucesso.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exit 0
-<br>
+# Executa o nam, indicando que a
+#entrada será o arquivo out.nam (que é a saída deste script). O &amp;
+#indica para o unix que o programa nam deve rodar em background.
+exec nam out.nam &
 
+#finaliza passando o código 0
+#para o shell que acionou. Caso seja usado um script para chamar o
+#programa, é possível testar o retorno. No caso, 0 é um indicativo de
+#sucesso.
+exit 0
 }
-<br>
+</pre>
 
 <br>
 Código completo clique aqui.<br>
