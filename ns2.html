@@ -46,18 +46,18 @@ Suponha o seguinte exemplo de script: <br>
 A linha a seguir cria um objeto chamado ns, da classe Simulador.&nbsp;
 O objeto ns pode ser utilizado para acessar os métodos e os atributos
 desta classe.<br>
-<span style="font-style: italic;">set ns [new Simulator]</span><br>
+<codigo>set ns [new Simulator]</codigo><br>
 &nbsp;<br>
 A linha a seguir abre um arquivo&nbsp; para escrita chamado&nbsp; out.nam <br>
-<span style="font-style: italic;">set nf [open out.nam w]</span><br>
+<codigo>set nf [open out.nam w]</codigo><br>
 <br>
 Utiliza-se a variável ns para configurar uma saída de resultado
 compatível com o aplicativo NAM para o arquivo out.nam (variável nf)<br>
-<span style="font-style: italic;">$ns namtrace-all $nf</span><br>
+<codigo>$ns namtrace-all $nf</codigo><br>
 <br>
 Cria duas variáveis, n0 e n1, que representam dois nós de rede  <br>
-<span style="font-style: italic;">set n0 [$ns node]</span><br style="font-style: italic;">
-<span style="font-style: italic;">set n1 [$ns node]</span><br>
+<codigo>set n0 [$ns node]</codigo>
+<codigo>set n1 [$ns node]</codigo><br>
 &nbsp;<br>
 Cria e configura um link full duplex entre os nós n0 e n1<br>
 Todos os elementos criados possuem capacidade de roteamento<br>
