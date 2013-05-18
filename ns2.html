@@ -1,0 +1,702 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta content="text/html; charset=windows-1252" http-equiv="content-type"><title>NS-2 - Simulador de rede.</title>
+
+<style type="text/css">
+body {font-family:Century Gothic, arial;}
+codigo {background-color:#d0d0d0;}
+</style>
+<link rel="stylesheet" type="text/css" href="./imagens/js/css/sh_typical.css">
+<script type="text/javascript" src="./imagens/js/sh_main.min.js"></script>
+<script type="text/javascript" src="./imagens/js/lang/sh_tcl.js"></script>
+<script type="text/javascript" src="./imagens/js/expande.js"></script></head><body onload="sh_highlightDocument(); expande('scriptexemplo');">
+
+<h1>NS-2 - Simulador de rede (versão 2):</h1>
+
+<h3>Introdução e utilização:</h3>
+NS-2 (Network Simulator versão 2) é um software gratuito e de código fonte aberto. <br>
+Para o funcionamento do NS-2 é necessário um script OTcl que irá mostrar ao programa as etapas a serem executas.<br>
+Abaixo existem alguns exemplos de scripts OTcl, com todas as funções comentadas.<br>
+É recomendável baixar e abrir em um editor de textos para acompanhar melhor a leitura dessa página.<br>
+<br>
+<br>
+<h3>Linguagem dos módulos:</h3>
+
+<ul>
+<h4>C++:</h4> É usada para programar os módulos responsáveis
+pelas aplicações e protocolos. Realiza o processamento de pacotes e
+implementação de algoritmos. Não é necessário o conhecimento desta
+linguagem a não ser que se queira adicionar uma nova funcionalidade ao
+NS. <h4>OTcl:</h4>Linguagem de uso genérico, utilizada pelo NS2 para configurar e modificar de forma rápida
+os cenários usados na simulação. É fácil de aprender se já se tem algum
+conhecimento em programação.
+</ul>
+<br>
+<h3>Conceitos Básicos do Uso da Linguagem OTcl para Configuração de Cenários:</h3>
+
+A linguagem OTcl é uma linguagem orientada a objetos e as classes no
+script OTcl correspondem a classes programadas em linguagem C++, no
+código fonte do NS2.<br>
+O manual do NS2 descrevendo as classes existentes está disponível em ...<br>
+<br>
+<b">Exemplo Simples</b><br>
+Suponha o seguinte exemplo de script: <br>
+<br>
+A linha a seguir cria um objeto chamado ns, da classe Simulador.&nbsp;
+O objeto ns pode ser utilizado para acessar os métodos e os atributos
+desta classe.<br>
+<span style="font-style: italic;">set ns [new Simulator]</span><br>
+&nbsp;<br>
+A linha a seguir abre um arquivo&nbsp; para escrita chamado&nbsp; out.nam <br>
+<span style="font-style: italic;">set nf [open out.nam w]</span><br>
+<br>
+Utiliza-se a variável ns para configurar uma saída de resultado
+compatível com o aplicativo NAM para o arquivo out.nam (variável nf)<br>
+<span style="font-style: italic;">$ns namtrace-all $nf</span><br>
+<br>
+Cria duas variáveis, n0 e n1, que representam dois nós de rede  <br>
+<span style="font-style: italic;">set n0 [$ns node]</span><br style="font-style: italic;">
+<span style="font-style: italic;">set n1 [$ns node]</span><br>
+&nbsp;<br>
+Cria e configura um link full duplex entre os nós n0 e n1<br>
+Todos os elementos criados possuem capacidade de roteamento<br>
+A taxa de transmissão configurada é de 1M bit por segundo<br>
+O atraso de propagação do enlace é de 10m segundos.<br>
+O algoritmo de gerência de fila é o DropTail (descarte de fim de fila).
+É importante observar que não foi definido o tamanho máximo do buffer.<br>
+Isto pode ser feito posteriomente - no entanto, o tamanho default para
+a fila é de 30 pacotes. Podem ser utilizados outros algoritmos para
+gerência de filas, como RED, SFQ, entre outros.<br>
+<br>
+$ns duplex-link $n0 $n1 1Mb 10ms DropTail<br>
+&nbsp;<br>
+Os agentes são elementos de camada 4 do modelo OSI.&nbsp; A linha a
+seguir cria uma variável chamada udp0 do tipo Agent/UDP, que está
+programada para imitar o comportamento do protocolo UDP de nível 4.<br>
+set udp0 [new Agent/UDP]<br>
+<br>
+Conecta o udp0 no nó n0. O nó 0 será o transmissor.<br>
+$ns attach-agent $n0 $udp0<br>
+<br>
+<br>
+O elementos do tipo Application representam aplicações. Estão
+disponíveis aplicações de transferência de arquivos (ftp), de .... A
+linha a seguir cria um aplicativo do tipo CBR (constant bit rate), ou
+de taxa constante, que gera pacotes separados por intervalos de tempo
+fixos (no caso, com 0,01 segundo entre pacotes) e tamanho de pacote
+fixo (no caso, com 1000 bytes). Para o exemplo a taxa de geração de
+informação será dada por (8*1000)/0.01 =&nbsp; 800Kbps.<br>
+set cbr0 [new Application/Traffic/CBR]<br>
+$cbr0 set packetSize_ 1000<br>
+$cbr0 set interval_ 0.01<br>
+$cbr0 attach-agent $udp0<br>
+&nbsp;<br>
+Para realizar a transmissão, é necessário definir o elemento receptor. O agente null criado a seguir será conectado ao nó n1.<br>
+set null0 [new Agent/Null]<br>
+$ns attach-agent $n1 $null0<br>
+&nbsp;<br>
+Configura o&nbsp; tráfego gerado pelo&nbsp; agente udp0 para o null0 (do nó n0 para o nó n1). <br>
+$ns connect $udp0 $null0&nbsp;&nbsp;<br>
+<br>
+Importante: o tempo simulado e o tempo real são diferentes. O tempo
+simulado é representado por uma variável interna ao NS2. Dependendo da
+complexidade da simulação, é possível simular 1000 segundos de operação
+da rede muito rapidamente. O contrário também é verdadeiro: em cenários
+complexos, para simular os mesmos 1000 segundos pode ser necessário um
+tempo de processamento muito grande.<br>
+Configura o escalonador de eventos, no exemplo, para indicar quais os momentos de início e fim da transmissão.<br>
+$ns at 0.5 "$cbr0 start"<br>
+$ns at 4.5 "$cbr0 stop"<br>
+<br>
+Configura o escalonador de eventos para acionar o procedimento finish no momento 5.0 de simulação.<br>
+$ns at 5.0 "finish"<br>
+&nbsp;<br>
+Invoca o método run da classe Simulator, que irá executar as funções agendadas no escalonador de eventos.<br>
+$ns run<br>
+<br>
+<br>
+Procedimento finish, que está sendo chamado no momento de simulação 5.0<br>
+
+<br>
+proc finish {} {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; -- avisa que serão usadas as variáveis
+globais ns e nf (se não fosse feita a definição, teriam que ser
+variáveis locais deste procedimento)<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; global ns nf
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -- descarrega os buffers para atualizar o arquivo<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $ns flush-trace
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; --&nbsp; fecha o arquivo
+<br>
+<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; close $nf
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -- executa o nam, indicando que a
+entrada será o arquivo out.nam (que é a saída deste script). O &amp;
+indica para o unix que o programa nam deve rodar em background.<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exec nam out.nam &amp;
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -- finaliza passando o código 0
+para o shell que acionou. Caso seja usado um script para chamar o
+programa, é possível testar o retorno. No caso, 0 é um indicativo de
+sucesso.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exit 0
+<br>
+
+}
+<br>
+
+<br>
+Código completo clique aqui.<br>
+para executar, digite no shell <span style="font-style: italic;">ns exemplo1.tcl</span><br>
+-------------------------------------------------------------------------------------------------<br>
+<b">Exemplo 2 - um pouco mais complexo</b><br>
+Serão comentados os comandos que ainda não foram abordados.<br>
+<br>
+
+[codigo]set ns [new Simulator][/codigo]<br>
+&nbsp;<br>
+Definição de cores, principalmente para uso no NAM <br>
+$ns color 1 Blue<br>
+$ns color 2 Red<br>
+&nbsp;<br>
+&nbsp;<br>
+<br>
+set nam_file [open out.nam w]<br>
+$ns namtrace-all $nam_file<br>
+<br>
+&nbsp;<br>
+set tf [open out.tr w]<br>
+<br>
+O método trace-all orienta o NS para direcionar um log descrevendo o que ocorre com todos os pacotes para o arquivo OUT.TR<br>
+Cuidado: o arquivo out.tr pode ficar muito grande!<br>
+Muitas vezes, não precisamos deste arquivo. Ao longo do script é possivel calcular estatísticas e imprimir.<br>
+O formato do arquivo será dado por:<br>
+...<br>
+<br>
+por exemplo, neste caso será obtido<br>
++ 0.0001 0 2 tcp 40 ------- 1 0.0 3.0 0 0<br>
+- 0.0001 0 2 tcp 40 ------- 1 0.0 3.0 0 0<br>
+r 0.001132 0 2 tcp 40 ------- 1 0.0 3.0 0 0<br>
++ 0.001132 2 3 tcp 40 ------- 1 0.0 3.0 0 0<br>
+- 0.001132 2 3 tcp 40 ------- 1 0.0 3.0 0 0<br>
+r 0.041452 2 3 tcp 40 ------- 1 0.0 3.0 0 0<br>
+<br>
+o que significa ...<br>
+<br>
+<br>
+<br>
+<br>
+$ns trace-all $tf<br>
+&nbsp;<br>
+É possível criar variáveis para controle. Neste caso, são criadas diversas variáveis que serão utilizadas posteriormente<br>
+#<br>
+#Simulation time<br>
+set SimTime 3.0<br>
+#Bottleneck link Bandwidth<br>
+set bw 10Mb<br>
+#Bottleneck link delay<br>
+set delay 20ms<br>
+#Bottleneck link queuetype<br>
+set queuetype DropTail<br>
+#Buffer Size<br>
+set BufferSize 50<br>
+#TCP packet size<br>
+set packetsize 1000<br>
+#TCP window size<br>
+set windowsize 80<br>
+#Initialize a variable<br>
+set old_data 0<br>
+&nbsp;<br>
+&nbsp;<br>
+Os nós são roteadores <br>
+set n0 [$ns node]<br>
+set n1 [$ns node]<br>
+set n2 [$ns node]<br>
+set n3 [$ns node]<br>
+&nbsp;<br>
+&nbsp;<br>
+Links entre os nós  --&gt;&gt;&gt;&gt;<br>
+<br>
+$ns duplex-link $n0 $n2 10Mb 1ms DropTail<br>
+$ns duplex-link $n1 $n2 10Mb 1ms DropTail<br>
+$ns duplex-link $n2 $n3 1Mb&nbsp; 40ms RED&nbsp;<br>
+<br>
+<br>
+Inserir um desenho da topologia<br>
+&gt;&gt;&gt;&gt; <br>
+Altera o tamanho da fila entre os nós&nbsp; n2 e n3, mas apenas neste
+sentido de transmissão (o sentido n3-&gt;n2 continua com o valor
+default)<br>
+$ns queue-limit $n2 $n3 $BufferSize<br>
+ <br>
+Monitora a fila <br>
+$ns duplex-link-op $n2 $n3 queuePos 0.5<br>
+&nbsp;<br>
+#<br>
+#Setup a TCP connection<br>
+#<br>
+set agent_tcp [new Agent/TCP]<br>
+#Attach TCP Agent to source node n0<br>
+$ns attach-agent $n0 $agent_tcp<br>
+&nbsp;<br>
+set agent_sink [new Agent/TCPSink]<br>
+#Attach a TCPSink Agent to destination node n3<br>
+$ns attach-agent $n3 $agent_sink<br>
+&nbsp;<br>
+#Connect TCP Agent with TCPSink Agent<br>
+$ns connect $agent_tcp $agent_sink<br>
+&nbsp;<br>
+#Flow Identity for TCP<br>
+$agent_tcp set fid_ 1<br>
+&nbsp;<br>
+A aplicação Application/FTP imita o comportamento do protocolo File Transfer Protocol<br>
+set traf_ftp [new Application/FTP]<br>
+$traf_ftp attach-agent $agent_tcp<br>
+&nbsp;<br>
+&nbsp;<br>
+&nbsp;<br>
+#Setup a UDP connection<br>
+#<br>
+set agent_udp [new Agent/UDP]<br>
+#Attach UDP Agent to source node n1<br>
+$ns attach-agent $n1 $agent_udp<br>
+&nbsp;<br>
+set agent_null [new Agent/Null]<br>
+#Attach a Null Agent to destination node n3<br>
+$ns attach-agent $n3 $agent_null<br>
+&nbsp;<br>
+#Connect UDP Agent with NULL Agent<br>
+$ns connect $agent_udp $agent_null<br>
+&nbsp;<br>
+#Flow Identity for UDP<br>
+$agent_udp set fid_ 2<br>
+&nbsp;<br>
+#Setup a CBR traffic over UDP connection<br>
+set traf_cbr [new Application/Traffic/CBR]<br>
+$traf_cbr attach-agent $agent_udp<br>
+&nbsp;<br>
+#CBR parameters<br>
+$traf_cbr set packet_size_ 100<br>
+$traf_cbr set rate_ 500Kb<br>
+&nbsp;<br>
+&nbsp;<br>
+#Schedule events for the FTP and CBR agents<br>
+$ns at 0.0001 "$traf_ftp start"<br>
+$ns at 0.5 "$traf_cbr start"<br>
+$ns at 4.0 "$traf_ftp stop"<br>
+$ns at 3.0 "$traf_cbr stop"<br>
+&nbsp;<br>
+&nbsp;<br>
+Configura um arquivo para armazenar a situação da fila entre n2 e n3<br>
+set trace_file [open trace_file.out w]<br>
+$ns at 0.0 "$ns trace-queue $n2 $n3 $trace_file"<br>
+&nbsp;<br>
+&nbsp;<br>
+&nbsp;<br>
+#<br>
+#Define a 'finish' procedure<br>
+#<br>
+#This procedure also calculates the throughput at the bottleneck link in Mbit/s<br>
+proc finish {} {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; global ns old_data nam_file trace_file tf<br>
+&nbsp;&nbsp;&nbsp; $ns flush-trace<br>
+&nbsp;&nbsp;&nbsp;&nbsp; #Close the trace file<br>
+&nbsp;&nbsp;&nbsp; close $trace_file<br>
+&nbsp;&nbsp;&nbsp; #Close the NAM trace file<br>
+&nbsp;&nbsp;&nbsp; close $nam_file<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; close $tf<br>
+&nbsp;&nbsp;&nbsp; #Execute NAM<br>
+&nbsp;&nbsp;&nbsp; exec nam out.nam &amp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exit 0<br>
+}<br>
+&nbsp;<br>
+&nbsp;<br>
+#Call the procedure finish at the end of simulation<br>
+$ns at 5.5 "finish"<br>
+&nbsp;<br>
+#Run the simulation<br>
+$ns run
+
+<br>
+-----------------------------------------------------------------------------------------<br>
+<br>
+<b>Exemplo 3</b><br>
+<br>
+Outro exemplo, com transmissão de traces a partir de arquivos,
+configuração de um modelo realista de perdas e gravação de dados
+específicos de saída.<br>
+<br>
+ <a href="" onclick="expande('scriptexemplo'); return false;">Ver o script exemplo.</a><br>
+<div id="scriptexemplo">
+<pre class="sh_tcl">
+## Exemplo para uso do arquivo trace
+##
+## -- 15/07/2012
+## ==================================
+## Carlos Marcelo Pedroso
+## Universidade Federal do Paraná
+## Departamento de Engenharia Elétrica
+## Centro Politécnico
+## CEP: 81531-990 - Curitiba - PR - Brasil
+## Pequenas modificações Evandro Copercini - 10/05/13
+
+#Define o tempo de simulação
+set stoptime 160.0
+#set plottime 16000.0
+
+#Inicialização da variável ns com o comando set (Obrigatório).
+set ns [new Simulator]
+
+# Nós n0 e n1 são roteadores
+set n0 [$ns node] 
+set n1 [$ns node]
+
+# Nó n2 a n6 são clientes 
+set n2 [$ns node] 
+set n3 [$ns node] 
+set n4 [$ns node] 
+set n5 [$ns node] 
+set n6 [$ns node]
+
+# O nó nservidor representa o servidor
+set nservidor [$ns node]
+
+# f será utilizado para armazenar o trace geral do NS2
+set f [open out.tr w]
+$ns trace-all $f
+# nf será utilizado para armazenar o trace do NAM
+set nf [open out.nam w]
+$ns namtrace-all $nf
+#Evita saidas desnecessárias.
+Tracefile set debug_ 0
+
+# f0 será utilizado para armazenar o número de pacotes perdidos
+set f0 [open perda2.tr w]
+
+# f1 será utilizado para armazenar o número de bytes transmitidos
+set f1 [open bytes2.tr w]
+
+# f2 será utilizado para armazenar o numero de pacotes na fila do agente 
+set f2 [open queue2.tr w]
+
+# Para diferenciar na animação do NAM.
+$ns color 1 Blue
+$ns color 2 Red
+$ns color 3 Green
+$ns color 4 Yellow
+$ns color 5 Orange
+
+#-------------------------------------------------------------------
+# Modelo de perda de pacotes simples.
+# set error_model [new ErrorModel]
+# $error_model set rate_ 0.01
+# $error_model set unit pkt
+# $error_model set ranvar [new RandomVariable/Uniform]
+# $error_model set drop-target [new Agent/Null]
+
+
+
+# -------------------------------------------------------------------
+# Gilbert-Elliot Error Model
+
+# w1 is stationary state probability represeting the probability that transmission will be in good state
+# w2 is stationary state probability that transmission will be in bad state
+# w1 = q/(p+q), w2 = p/(p+q) [is a good basic exercice to prove it]
+# p is transition prob. from good state to bad state
+# q is transition prob. from bad state to good state
+# Transition matrix is: P = { {1-p p}
+#                             {q 1-q} }
+# 
+# Final error probability Ploss = (Pg)w1+(Pb)w2
+# Pg is error prob. in good state
+# Pb is error prob. in bad state
+
+
+# Test - Parameters
+# Pg=0, Pb=0.5
+# p = 0.01, q = 0.90
+# w1 = 0.98901, w2 = 0.010989
+# In this case, Ploss = 0*0.98901 + 0.5*0.010989 = 0.00549 (ou 0.549%)
+       
+set good_state [new ErrorModel/Uniform 0 pkt]
+set bad_state  [new ErrorModel/Uniform 0.5 pkt]	
+
+# Array of states (error models)
+set m_states [list $good_state $bad_state]
+
+# Durations for each of the states, tmp, tmp1 and tmp2, respectively
+# Deve fazer as contas e configurar "set m_periods[list w1 w2]
+
+set m_periods [list  0.98901 0.010989]  ;# average value
+# Transition state model matrix
+set m_transmx { {0.99 0.01}  
+                {0.90 0.10} }
+
+set m_trunit pkt
+# Use time-based transition
+set m_sttype pkt
+set m_nstates 2
+set m_nstart [lindex $m_states 0]
+set em [new ErrorModel/MultiState $m_states $m_periods $m_transmx $m_trunit $m_sttype $m_nstates $m_nstart]
+
+
+# Fim da config do modelo Gilbert-Elliot
+#----------------------------------------------------------------------------
+
+
+
+# Link entre n0 e n1 é o bottleneck (gargalo).
+$ns duplex-link $n0 $n1 10Mb 10ms DropTail
+
+# Os clientes estão do lado do n0
+$ns duplex-link $n0 $n2 10Mb 5ms DropTail
+$ns duplex-link $n0 $n3 10Mb 5ms DropTail
+$ns duplex-link $n0 $n4 10Mb 5ms DropTail
+$ns duplex-link $n0 $n5 10Mb 5ms DropTail
+$ns duplex-link $n0 $n6 10Mb 5ms DropTail
+
+# O servidor está do outro lado
+$ns duplex-link $n1 $nservidor 10Mb 5ms DropTail
+
+
+# Tamanho das filas
+$ns queue-limit $n0 $n1 10000
+$ns queue-limit $n0 $n2 10000
+$ns queue-limit $n0 $n3 10000
+$ns queue-limit $n0 $n4 10000
+$ns queue-limit $n0 $n5 10000
+$ns queue-limit $n0 $n6 10000
+$ns queue-limit $n1 $nservidor 10000
+
+# configura o modelo de perdas entre os nós 0 e 1
+$ns lossmodel $em $n1 $n0
+
+$ns duplex-link-op $n1 $nservidor orient right
+$ns duplex-link-op $n0 $n1 orient right
+
+$ns duplex-link-op $n0 $n2 orient up
+$ns duplex-link-op $n0 $n3 orient left-up
+$ns duplex-link-op $n0 $n4 orient left
+$ns duplex-link-op $n0 $n5 orient left-down
+$ns duplex-link-op $n0 $n6 orient down
+
+$ns duplex-link-op $n0 $n1 queuePos 0.5
+$ns trace-queue $n1 $n0 $f
+
+
+#########################################
+## Trace files 
+## 
+
+#Abre arquivos de trace para simulacão
+set tfile1 [new Tracefile]
+$tfile1 filename coastguard.tracefile
+
+set tfile2 [new Tracefile]
+$tfile2 filename trace2
+
+set tfile3 [new Tracefile]
+$tfile3 filename trace3
+
+set tfile4 [new Tracefile]
+$tfile4 filename trace4
+
+set tfile5 [new Tracefile]
+$tfile5 filename trace5
+
+#########################################
+## Configura os aplicativos com tráfego configurado
+## nos traces
+## Protocolo é UDP, como precisamos
+
+## Fonte 1
+set s1 [new Agent/UDP]
+$ns attach-agent $nservidor $s1
+$s1 set fid_ 1
+
+set null1 [new Agent/LossMonitor]
+$ns attach-agent $n6 $null1
+
+$ns connect $s1 $null1
+
+set trace1 [new Application/Traffic/Trace]
+$trace1 attach-tracefile $tfile1
+$trace1 attach-agent $s1
+$trace1 attach-agent $s1
+
+## Fonte 2
+set s2 [new Agent/UDP]
+$ns attach-agent $nservidor $s2
+$s2 set fid_ 2
+
+set null2 [new Agent/Null]
+$ns attach-agent $n2 $null2
+
+$ns connect $s2 $null2
+
+set trace2 [new Application/Traffic/Trace]
+$trace2 attach-tracefile $tfile2
+$trace2 attach-agent $s2
+
+## Fonte 3
+set s3 [new Agent/UDP]
+$ns attach-agent $nservidor $s3
+$s3 set fid_ 3
+
+set null3 [new Agent/Null]
+$ns attach-agent $n3 $null3
+
+$ns connect $s3 $null3
+
+set trace3 [new Application/Traffic/Trace]
+$trace3 attach-tracefile $tfile3
+$trace3 attach-agent $s3
+
+## Fonte 4
+set s4 [new Agent/UDP]
+$ns attach-agent $nservidor $s4
+$s4 set fid_ 4
+
+set null4 [new Agent/Null]
+$ns attach-agent $n4 $null4
+
+$ns connect $s4 $null4
+
+set trace4 [new Application/Traffic/Trace]
+$trace4 attach-tracefile $tfile4
+
+$trace4 attach-agent $s4
+
+## Fonte 5
+set s5 [new Agent/UDP]
+$ns attach-agent $nservidor $s5
+$s5 set fid_ 5
+
+set null5 [new Agent/Null]
+$ns attach-agent $n5 $null5
+
+$ns connect $s5 $null5
+
+set trace5 [new Application/Traffic/Trace]
+$trace5 attach-tracefile $tfile5
+
+$trace5 attach-agent $s5
+
+#########################################
+# Agenda tarefas
+
+$ns at 0.1 "$trace1 start"
+$ns at 0.1 "$trace2 start"
+$ns at 0.1 "$trace3 start"
+$ns at 0.1 "$trace4 start"
+$ns at 0.1 "$trace5 start"
+$ns at 0.0 "record"
+
+$ns at $stoptime "$trace1 stop"
+$ns at $stoptime "$trace2 stop"
+$ns at $stoptime "$trace3 stop"
+$ns at $stoptime "$trace4 stop"
+$ns at $stoptime "$trace5 stop"
+
+$ns at $stoptime "close $f"
+$ns at $stoptime "finish tg"
+$ns at $stoptime "close $f0"
+$ns at $stoptime "close $f1"
+$ns at $stoptime "close $f2"
+
+proc record {} {
+
+        global null1 f0 f1 f2 ns
+  
+        set time 0.1 ;#Set Sampling Time to 0.9 Sec
+        set l0 [$null1 set nlost_]
+        set b0 [$null1 set bytes_]
+        set n0 [$null1 set npkts_]
+
+        set now [$ns now]
+       
+        # Record Packet Loss Rate in File
+        puts $f0 "$now [expr $l0]"
+
+        # Record Bytes transmitted in file
+        puts $f1 "$now [expr $b0]"
+
+        # Record queue size
+        puts $f2 "$now [expr $n0]"
+
+        # Reset Variables
+        $null1 set l0 0
+        $ns at [expr $now+$time] "record"   ;# Schedule Record after $time interval sec
+}
+
+proc finish file {
+		#Executa o trace no NAM (em uma janela).
+        exec nam out.nam &amp;
+        #exec rm -f out.tr
+        exit 0
+}
+
+#Roda a simulação
+$ns run
+
+exit 
+</pre>
+</div> 
+ <a href="/tools/exemplo.tcl">Baixar exemplo.tcl</a><br>
+<br><br>
+<h3>NS-2 integrado com NAM (Network Animator):</h3>O objetivo do NAM é apresentar o cenário de simulação e uma animação representando o resultado da transmissão dos pacotes.<br>
+O uso do NAM normalmente é meramente ilustrativo. Para obter
+estatísticas sobre os resultados da simulação, devem ser analisados os
+arquivos de resultado.<br>
+<br>
+<img src="./imagens/nam.jpg">
+
+<h3><br>
+</h3><b>Outros Exemplos</b>
+<p>Servidor HTTP</p>
+<p>....<br>
+</p>
+<p><br>
+</p>
+<p>
+
+<b>Utilizando o NS2 para simulação com traces de vídeos.</b></p>
+<p>Uma das maneiras para implementar a simulação da transmissão de
+vídeo é transformar o tráfego de pacotes gerado pelo CODEC de vídeo em
+um arquivo de trace para o NS2.</p>
+<p>Neste caso, o CODEC não será capaz de se adaptar às condições da rede.<br>
+</p>
+<p>Para implementar esta alternativa, é necessário criar o arquivo de trace no formato aceito pelo NS.</p>
+<p>Para obter o arquivo representando o tráfego criado pelo CODEC, é possível utilizar o aplicativo <a href="../../mp4trace.html">mp4trace</a></p>
+<p>Descrever o MP4TRACE (o que ele faz). Onde pode ser encontrado.&nbsp; Exemplo de uso do MP4TRACE: LINK. <br>
+</p>
+Para transformar o arquivo de saída do MP4TRACE no formato aceito pelo NS2, pode ser utilizado o programa&nbsp; <a href="/tools/transforma.zip">transforma trace</a> (<a href="/tools/transforma.c">Código fonte</a>) <br>
+<p>Exemplo de uso.<br>
+</p>
+<p>
+<codigo>./transforma nome-arquivo-entrada nome-arquivo-saida</codigo><br>
+Ex: ./transforma coastguard.st coastguard.trace<br><br>
+Onde coastguard.st é o arquivo gerado  <br>
+e coastguard.trace é o arquivo de saída que será usado no NS2.<br>
+
+
+
+<p><br>
+</p>
+<p><br>
+<br>
+<b>Referências:</b><br>
+GONÇALVES, L. C.; CORRÊA, M. E. O. Tutorial NS-2, 2005<br>
+<br>OLIVEIRA, RODOLFO; Introdução ao simulador de redes “TheNetwork Simulator ns2” - 2010/2011<br>
+<br>GREIS, MARC; Tutorial for the Network Simulator "ns"<br>
+
+</p>
+</body></html>
