@@ -10,7 +10,8 @@ codigo {background-color:#d0d0d0;}
 <link rel="stylesheet" type="text/css" href="./imagens/js/css/sh_typical.css">
 <script type="text/javascript" src="./imagens/js/sh_main.min.js"></script>
 <script type="text/javascript" src="./imagens/js/lang/sh_tcl.js"></script>
-<script type="text/javascript" src="./imagens/js/expande.js"></script></head><body onload="sh_highlightDocument(); expande('scriptexemplo');">
+<script type="text/javascript" src="./imagens/js/expande.js"></script></head>
+<body onload="sh_highlightDocument(); expande('scriptexemplo'); expande('exemplo1');">
 
 <h1>NS-2 - Simulador de rede (versão 2):</h1>
 
@@ -40,23 +41,79 @@ script OTcl correspondem a classes programadas em linguagem C++, no
 código fonte do NS2.<br>
 O manual do NS2 descrevendo as classes existentes está disponível em ...<br>
 <br>
+
 <b>Exemplo Simples:</b><br>
+
+ <a href="" onclick="expande('exemplo1'); return false;">Ver o script completo.</a><br>
+<div id="exemplo1">
+<pre class="sh_tcl">
+#Create a simulator object
+set ns [new Simulator]
+
+#Open the nam trace file
+set nf [open out.nam w]
+$ns namtrace-all $nf
+
+#Define a 'finish' procedure
+proc finish {} {
+        global ns nf
+        $ns flush-trace
+	#Close the trace file
+        close $nf
+	#Execute nam on the trace file
+        #exec nam out.nam &
+        exit 0
+}
+
+#Create two nodes
+set n0 [$ns node]
+set n1 [$ns node]
+
+#Create a duplex link between the nodes
+$ns duplex-link $n0 $n1 1Mb 10ms DropTail
+
+#Create a UDP agent and attach it to node n0
+set udp0 [new Agent/UDP]
+$ns attach-agent $n0 $udp0
+
+# Create a CBR traffic source and attach it to udp0
+set cbr0 [new Application/Traffic/CBR]
+$cbr0 set packetSize_ 1000
+$cbr0 set interval_ 0.001
+$cbr0 attach-agent $udp0
+
+#Create a Null agent (a traffic sink) and attach it to node n1
+set null0 [new Agent/Null]
+$ns attach-agent $n1 $null0
+
+#Connect the traffic source with the traffic sink
+$ns connect $udp0 $null0  
+#Schedule events for the CBR agent
+$ns at 0.5 "$cbr0 start"
+$ns at 4.5 "$cbr0 stop"
+#Call the finish procedure after 5 seconds of simulation time
+$ns at 5.0 "finish"
+
+#Run the simulation
+$ns run
+</pre>
+</div>
+ <a href="/tools/exemplo.tcl">Baixar exemplo1.tcl</a><br>
+<br>
 Suponha o seguinte exemplo de script: <br>
 <br>
 A linha a seguir cria um objeto chamado ns, da classe Simulador.
 O objeto ns pode ser utilizado para acessar os métodos e os atributos
 desta classe.<br>
-<pre class="sh_tcl">set ns [new Simulator]</pre>
-<br>
+<pre class="sh_tcl">set ns [new Simulator]</pre><br>
 A linha a seguir abre um arquivo para escrita chamado out.nam <br>
-<pre class="sh_tcl">set nf [open out.nam w]</pre>
-<br>
+<pre class="sh_tcl">set nf [open out.nam w]</pre><br>
 Utiliza-se a variável ns para configurar uma saída de resultado
 compatível com o aplicativo NAM para o arquivo out.nam (variável nf)<br>
-<pre class="sh_tcl">$ns namtrace-all $nf</pre><br>
+<pre class="sh_tcl">$ns namtrace-all $nf</pre><br>
 Cria duas variáveis, n0 e n1, que representam dois nós de rede  <br>
 <pre class="sh_tcl">set n0 [$ns node]
-set n1 [$ns node]</pre><br>
+set n1 [$ns node]</pre><br>
 Cria e configura um link full duplex entre os nós n0 e n1<br>
 Todos os elementos criados possuem capacidade de roteamento<br>
 A taxa de transmissão configurada é de 1M bit por segundo<br>
@@ -66,15 +123,13 @@ O algoritmo de gerência de fila é o DropTail (descarte de fim de fila).
 Isto pode ser feito posteriomente - no entanto, o tamanho default para
 a fila é de 30 pacotes. Podem ser utilizados outros algoritmos para
 gerência de filas, como RED, SFQ, entre outros.<br>
-<pre class="sh_tcl">$ns duplex-link $n0 $n1 1Mb 10ms DropTail</pre><br>
+<pre class="sh_tcl">$ns duplex-link $n0 $n1 1Mb 10ms DropTail</pre><br>
 Os agentes são elementos de camada 4 do modelo OSI. A linha a
 seguir cria uma variável chamada udp0 do tipo Agent/UDP, que está
 programada para imitar o comportamento do protocolo UDP de nível 4.<br>
-set udp0 [new Agent/UDP]<br>
-<br>
+<pre class="sh_tcl">set udp0 [new Agent/UDP]</pre><br>
 Conecta o udp0 no nó n0. O nó 0 será o transmissor.<br>
-<pre class="sh_tcl">$ns attach-agent $n0 $udp0</pre><br>
-<br>
+<pre class="sh_tcl">$ns attach-agent $n0 $udp0</pre><br>
 O elementos do tipo Application representam aplicações. Estão
 disponíveis aplicações de transferência de arquivos (ftp), de .... A
 linha a seguir cria um aplicativo do tipo CBR (constant bit rate), ou
@@ -85,13 +140,12 @@ informação será dada por (8*1000)/0.01 = 800Kbps.<br>
 <pre class="sh_tcl">set cbr0 [new Application/Traffic/CBR]
 $cbr0 set packetSize_ 1000
 $cbr0 set interval_ 0.01
-$cbr0 attach-agent $udp0</pre>
-<br>
+$cbr0 attach-agent $udp0</pre><br>
 Para realizar a transmissão, é necessário definir o elemento receptor. O agente null criado a seguir será conectado ao nó n1.<br>
 <pre class="sh_tcl">set null0 [new Agent/Null]
-$ns attach-agent $n1 $null0</pre><br>
+$ns attach-agent $n1 $null0</pre><br>
 Configura o tráfego gerado pelo agente udp0 para o null0 (do nó n0 para o nó n1). <br>
-<pre class="sh_tcl">$ns connect $udp0 $null0</pre><br>
+<pre class="sh_tcl">$ns connect $udp0 $null0</pre><br>
 <font color="red">Importante:</font> o tempo simulado e o tempo real são diferentes. O tempo
 simulado é representado por uma variável interna ao NS2. Dependendo da
 complexidade da simulação, é possível simular 1000 segundos de operação
@@ -100,46 +154,32 @@ complexos, para simular os mesmos 1000 segundos pode ser necessário um
 tempo de processamento muito grande.<br>
 Configura o escalonador de eventos, no exemplo, para indicar quais os momentos de início e fim da transmissão.<br>
 <pre class="sh_tcl">$ns at 0.5 "$cbr0 start"
-$ns at 4.5 "$cbr0 stop"</pre>
-<br>
+$ns at 4.5 "$cbr0 stop"</pre><br>
 Configura o escalonador de eventos para acionar o procedimento finish no momento 5.0 de simulação.<br>
-<pre class="sh_tcl">$ns at 5.0 "finish"</pre><br>
+<pre class="sh_tcl">$ns at 5.0 "finish"</pre><br>
 Invoca o método run da classe Simulator, que irá executar as funções agendadas no escalonador de eventos.<br>
-<pre class="sh_tcl">$ns run</pre><br>
+<pre class="sh_tcl">$ns run</pre><br>
 Procedimento finish, que está sendo chamado no momento de simulação 5.0<br>
-<pre class="sh_tcl">proc finish {} {
-
-# Avisa que serão usadas as variáveis
-#globais ns e nf (se não fosse feita a definição, teriam que ser
-#variáveis locais deste procedimento).
-global ns nf
-
-# Descarrega os buffers para atualizar o arquivo
-$ns flush-trace
-
-
-# Fecha o arquivo
-close $nf
-
-# Executa o nam, indicando que a
-#entrada será o arquivo out.nam (que é a saída deste script). O &amp;
-#indica para o unix que o programa nam deve rodar em background.
-exec nam out.nam &
-
-#finaliza passando o código 0
-#para o shell que acionou. Caso seja usado um script para chamar o
-#programa, é possível testar o retorno. No caso, 0 é um indicativo de
-#sucesso.
-exit 0
-}
-</pre>
+<pre class="sh_tcl">proc finish {} {</pre><br>
+Avisa que serão usadas as variáveis globais ns e nf (se não fosse feita a definição, teriam que ser<br>
+variáveis locais deste procedimento).<br>
+<pre class="sh_tcl">global ns nf</pre><br>
+Descarrega os buffers para atualizar o arquivo<br>
+<pre class="sh_tcl">$ns flush-trace</pre><br>
+Fecha o arquivo<br>
+<pre class="sh_tcl">close $nf</pre><br>
+Executa o nam, indicando que a entrada será o arquivo out.nam (que é a saída deste script). O &amp;
+indica para o unix que o programa nam deve rodar em background.
+<pre class="sh_tcl">exec nam out.nam &</pre><br>
+finaliza passando o código 0 para o shell que acionou. Caso seja usado um script para chamar o
+programa, é possível testar o retorno. No caso, 0 é um indicativo de sucesso.
+<pre class="sh_tcl">exit 0
+}</pre>
 <br>
-
-Código completo clique aqui.<br>
-para executar, digite no shell <codigo>ns exemplo1.tcl</codigo>
-<br>
+Para executar, digite no shell <codigo>ns exemplo1.tcl</codigo>
+<br><br><br>
 -------------------------------------------------------------------------------------------------<br>
-<b">Exemplo 2 - um pouco mais complexo</b><br>
+<b>Exemplo 2 - um pouco mais complexo:</b><br>
 Serão comentados os comandos que ainda não foram abordados.<br>
 <br>
 
