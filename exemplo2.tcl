@@ -1,10 +1,3 @@
-##################################
-#				 #
-#	EPL 653 - NS-2 LABS	 #
-#				 #
-##################################
-
-#
 # Example Tcl script
 #
 # The folllowing Tcl script develops a simple network topology and
