@@ -45,54 +45,56 @@ O manual do NS2 descrevendo as classes existentes está disponível em ...<br>
  <a href="" onclick="expande('exemplo1'); return false;">Ver o script completo.</a><br>
 <div id="exemplo1">
 <pre class="sh_tcl">
-#Create a simulator object
+#Cria um objeto chamado ns, da classe Simulador
 set ns [new Simulator]
 
-#Open the nam trace file
+#Abre o arquivo de trace do NAM
 set nf [open out.nam w]
 $ns namtrace-all $nf
 
-#Define a 'finish' procedure
-proc finish {} {
-        global ns nf
-        $ns flush-trace
-	#Close the trace file
-        close $nf
-	#Execute nam on the trace file
-        #exec nam out.nam &
-        exit 0
-}
-
-#Create two nodes
+#Cria dois nós
 set n0 [$ns node]
 set n1 [$ns node]
 
-#Create a duplex link between the nodes
+#Cria um duplex link entre os dois nós
 $ns duplex-link $n0 $n1 1Mb 10ms DropTail
 
-#Create a UDP agent and attach it to node n0
+#Cria um agente UDP e junta ao nó n0
 set udp0 [new Agent/UDP]
 $ns attach-agent $n0 $udp0
 
-# Create a CBR traffic source and attach it to udp0
+#Cria um fonte de tráfego CBR e junta ao agente udp0
 set cbr0 [new Application/Traffic/CBR]
 $cbr0 set packetSize_ 1000
 $cbr0 set interval_ 0.001
 $cbr0 attach-agent $udp0
 
-#Create a Null agent (a traffic sink) and attach it to node n1
+#Cria um agente nulo(um 'traffic sink') e junta ao nó n1
 set null0 [new Agent/Null]
 $ns attach-agent $n1 $null0
 
-#Connect the traffic source with the traffic sink
+#Conecta a fonte de tráfego ao agente nulo
 $ns connect $udp0 $null0  
-#Schedule events for the CBR agent
+
+#Agenda eventos para o agente CBR
 $ns at 0.5 "$cbr0 start"
 $ns at 4.5 "$cbr0 stop"
-#Call the finish procedure after 5 seconds of simulation time
+
+#Executa o procedimento de finalização após 5 segundos de simulação
 $ns at 5.0 "finish"
 
-#Run the simulation
+#Define o procedimento de finalização
+proc finish {} {
+        global ns nf
+        $ns flush-trace
+	#Fecha o arquivo de trace
+        close $nf
+	#Executa o nam no arquivo de trace
+        #exec nam out.nam &
+        exit 0
+}
+
+#Roda a simulação
 $ns run
 </pre>
 </div>
